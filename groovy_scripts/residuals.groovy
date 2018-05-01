@@ -5,10 +5,7 @@
  * (with Torri Roark and Tyler Viducic, supervised by Mac Mestayer)
  */
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.attribute.BasicFileAttributes
+import java.io.File;
 
 import org.jlab.io.hipo.*;
 import org.jlab.io.base.DataEvent;
@@ -27,20 +24,6 @@ import org.jlab.groot.fitter.DataFitter;
 public class residuals{
 	// groovy program to create plots / calculate stats from CLAS12 B=0 data that are of the form 
 	// of those from clas_notes02/02-010.pdf by S. A. Morrow and M. D. Mestayer
-
-	public static def hipo_list_creation(String directory_location) {
-		// returns an array of the part of the file name after the directory
-		// hipo files then speicified by args[0]+hipo_list[i] for some index i
-		Path directory = Paths.get(directory_location);
-		BasicFileAttributes attrs = Files.readAttributes(directory, BasicFileAttributes);
-		def hipo_list = []; 
-		int iteration = 0;
-		directory.eachFile{
-   			hipo_list[iteration] = "${it.fileName}";
-    		iteration++;
-		}
-		return hipo_list;
-	}
 
 	public static boolean banks_test(HipoDataEvent event){
 		boolean banks_result = true; // check to see if the event has all of the banks present
@@ -136,12 +119,15 @@ public class residuals{
 		// args[3] = maximum polar angle of track to analyze, if not specified = 90 degrees
 		// args[4] = plots requested, 1 = sector vs superlayer, 2 = sector vs layer, else no plots
 
+		File[] hipo_list;
 		if (args.length == 0) {
 			// exits program if input directory not specified 
         	println("ERROR: Please enter a hipo file directory as the first argument");
        		System.exit(0);
-    	} 
-		def hipo_list = hipo_list_creation(args[0]); // build array of files in directory
+    	} else {
+    		File directory = new File(args[0]);
+    		hipo_list = directory.listFiles();
+    	}
 
 		// create hipo file list
 		int n_files;
@@ -247,7 +233,7 @@ public class residuals{
 				+" out of "+n_files);
 			// limit to a certain number of files defined by n_files
 			HipoDataSource reader = new HipoDataSource();
-			reader.open(args[0]+hipo_list[current_file]); // open next hipo file
+			reader.open(hipo_list[current_file]); // open next hipo file
 
 			while(reader.hasEvent()==true){ // cycle through events
 				HipoDataEvent event = reader.getNextEvent(); // load next event in the hipo file

@@ -5,10 +5,7 @@
  * (with Torri Roark and Tyler Viducic, supervised by Mac Mestayer)
  */
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.attribute.BasicFileAttributes
+import java.io.File;
 
 import org.jlab.io.hipo.*;
 import org.jlab.io.base.DataEvent;
@@ -25,21 +22,22 @@ import org.jlab.groot.math.F1D;
 import org.jlab.groot.math.Func1D;
 import org.jlab.groot.fitter.DataFitter;
 
+
 public class elastic_peak{
 
-	public static def hipo_list_creation(String directory_location) {
-		// returns an array of the part of the file name after the directory
-		// hipo files then speicified by args[0]+hipo_list[i] for some index i
-		Path directory = Paths.get(directory_location);
-		BasicFileAttributes attrs = Files.readAttributes(directory, BasicFileAttributes);
-		def hipo_list = []; 
-		int iteration = 0;
-		directory.eachFile{
-   			hipo_list[iteration] = "${it.fileName}";
-    		iteration++;
-		}
-		return hipo_list;
-	}
+	// public static def hipo_list_creation(String directory_location) {
+	// 	// returns an array of the part of the file name after the directory
+	// 	// hipo files then speicified by args[0]+hipo_list[i] for some index i
+	// 	Path directory = Paths.get(directory_location);
+	// 	BasicFileAttributes attrs = Files.readAttributes(directory, BasicFileAttributes);
+	// 	def hipo_list = []; 
+	// 	int iteration = 0;
+	// 	directory.eachFile{
+ //   			hipo_list[iteration] = "${it.fileName}";
+ //    		iteration++;
+	// 	}
+	// 	return hipo_list;
+	// }
 
 	public static boolean banks_test(HipoDataEvent event) {
 		boolean banks_exist = true; // check to see if the event has all of the banks present
@@ -130,12 +128,15 @@ public class elastic_peak{
 
 	public static void main(String[] args) {
 
+		File[] hipo_list;
 		if (args.length == 0) {
 			// exits program if input directory not specified 
         	println("ERROR: Please enter a hipo file directory as the first argument");
        		System.exit(0);
-    	} 
-    	def hipo_list = hipo_list_creation(args[0]); // build array of files in directory
+    	} else {
+    		File directory = new File(args[0]);
+    		hipo_list = directory.listFiles();
+    	}
 
     	int n_files;
 		if ((args.length < 2)||(Integer.parseInt(args[1])>hipo_list.size())) {
@@ -187,7 +188,7 @@ public class elastic_peak{
 				+" out of "+n_files);
 			// limit to a certain number of files defined by n_files
 			HipoDataSource reader = new HipoDataSource();
-			reader.open(args[0]+hipo_list[current_file]); // open next hipo file
+			reader.open(hipo_list[current_file]); // open next hipo file
 
 			while(reader.hasEvent()==true){ // cycle through events
 				HipoDataEvent event = reader.getNextEvent();
