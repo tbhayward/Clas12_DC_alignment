@@ -24,7 +24,7 @@ import org.jlab.groot.math.F1D;
 import org.jlab.groot.math.Func1D;
 import org.jlab.groot.fitter.DataFitter;
 
-public class clas6_results{
+public class residuals{
 	// groovy program to create plots / calculate stats from CLAS12 B=0 data that are of the form 
 	// of those from clas_notes02/02-010.pdf by S. A. Morrow and M. D. Mestayer
 
