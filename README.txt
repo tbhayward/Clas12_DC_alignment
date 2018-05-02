@@ -1,3 +1,11 @@
+/*
+ * author Timothy B. Hayward
+ * 2018
+ * CLAS (12) Collaboration Service Work 
+ * (with Torri Roark and Tyler Viducic, supervised by Mac Mestayer)
+ */
+
+
 Currently using 3 groovy scripts:
 
 elastic_peak.groovy
