@@ -1,8 +1,8 @@
 /*
  * author Timothy B. Hayward
- * April 2018
+ * 2018
  * CLAS (12) Collaboration Service Work 
- * (with Torri Roark and Tyler Viducic, supervised by Mac Mestayer)
+ * (supervised by Mac Mestayer)
  */
 
 import java.io.File;
@@ -32,7 +32,14 @@ public class residuals{
         	banks_result = false;
     	} else if (!(event.hasBank("TimeBasedTrkg::TBTracks"))) {
     		banks_result = false;
-    	}
+    	} else if (!(event.hasBank("REC::Particle"))) {
+    		banks_result = false;
+    	} else if (!(event.hasBank("REC::Calorimeter"))) {
+    		banks_result = false;
+    	} else if (!(event.hasBank("REC::Cherenkov"))) {
+    		banks_result = false;
+    	} 
+
     	return banks_result;
 	}
 
@@ -59,12 +66,13 @@ public class residuals{
 	public static F1D fit_function(int n_bins, double min_bin, double max_bin, H1F histogram) {
 
 		// first fit to a Gaussian and check chi^2/dof 
-		double[] func_limits = [0.6, 1.5, -100, 100, 600, 1500];
+		double[] func_limits = [0.6, 1.5, -500, 500, 200, 1500];
 		String func_string = "[amp]*gaus(x,[mean],[sigma])";
 		F1D func = new F1D("func",func_string,min_bin,max_bin);
 		func.setParameter(0, 1.0); func.setParLimits(0, func_limits[0], func_limits[1]);
-		func.setParameter(1, 0.0); func.setParLimits(1, func_limits[2], func_limits[3]);
-		func.setParameter(2, 100); func.setParLimits(2, func_limits[4], func_limits[5]);
+		func.setParameter(1, histogram.getMean()); 
+		func.setParLimits(1, func_limits[2], func_limits[3]);
+		func.setParameter(2, 250); func.setParLimits(2, func_limits[4], func_limits[5]);
 		DataFitter.fit(func, histogram, "Q"); //No options uses error for sigma
 		double chi2dof = func.getChiSquare()/(n_bins-1);
 
@@ -72,11 +80,11 @@ public class residuals{
 		boolean chi2dof_check = true; 
 		F1D test_func = new F1D("gauss+?",func_string,min_bin,max_bin);
 		test_func.setParameter(0, 1.0); test_func.setParLimits(0, func_limits[0], func_limits[1]);
-		test_func.setParameter(1, 0.0); test_func.setParLimits(1, func_limits[2], func_limits[3]);
-		test_func.setParameter(2, 100); test_func.setParLimits(2, func_limits[4], func_limits[5]);
+		test_func.setParameter(1, histogram.getMean()); 
+		test_func.setParLimits(1, func_limits[2], func_limits[3]);
+		test_func.setParameter(2, 250); test_func.setParLimits(2, func_limits[4], func_limits[5]);
 		int poly_order = 0; // current order of polynomial added to func
 		while(chi2dof_check) {
-		// for (int current_order=0; current_order < 3; current_order++) {
 			func_string+="+[p"+poly_order+"]"
 			for (int i=0; i<poly_order; i++) {
 				func_string+="*x";
@@ -85,9 +93,9 @@ public class residuals{
 			}
 			test_func.setParameter(0, 1.0); 
 			test_func.setParLimits(0, func_limits[0], func_limits[1]);
-			test_func.setParameter(1, 0.0);
+			test_func.setParameter(1, histogram.getMean());
 			test_func.setParLimits(1, func_limits[2], func_limits[3]);
-			test_func.setParameter(2, 100);
+			test_func.setParameter(2, 250);
 			test_func.setParLimits(2, func_limits[4], func_limits[5]);
 			DataFitter.fit(test_func, histogram, "Q"); //No options uses error for sigma
 
@@ -119,6 +127,7 @@ public class residuals{
 		// args[3] = maximum polar angle of track to analyze, if not specified = 90 degrees
 		// args[4] = plots requested, 1 = sector vs superlayer, 2 = sector vs layer, else no plots
 
+		// create hipo file list
 		File[] hipo_list;
 		if (args.length == 0) {
 			// exits program if input directory not specified 
@@ -129,7 +138,6 @@ public class residuals{
     		hipo_list = directory.listFiles();
     	}
 
-		// create hipo file list
 		int n_files;
 		if ((args.length < 2)||(Integer.parseInt(args[1])>hipo_list.size())) {
 			// if number of files not specified or too large, set to number of files in directory
@@ -193,7 +201,7 @@ public class residuals{
 		F1D[][] sVsl_fits = new F1D[6][6]; // 
 		F1D[][] sVl_fits = new F1D[6][36]; 
 		// declare number of bins and boundaries
-		int n_bins = 250;
+		int n_bins = 150;
 		double min_bin = -0.5*10000;
 		double max_bin = 0.5*10000;
 		int current_canvas = 0;
@@ -237,9 +245,13 @@ public class residuals{
 
 			while(reader.hasEvent()==true){ // cycle through events
 				HipoDataEvent event = reader.getNextEvent(); // load next event in the hipo file
+
 				if (banks_test(event)) { // check that the necessary banks are present
 					HipoDataBank hitBank= (HipoDataBank) event.getBank("TimeBasedTrkg::TBHits");
 					HipoDataBank trkBank= (HipoDataBank) event.getBank("TimeBasedTrkg::TBTracks");
+					HipoDataBank recBank= (HipoDataBank) event.getBank("REC::Particle");
+					if (recBank.rows()>0) {
+						
 					for(int hitBankRow=0; hitBankRow<hitBank.rows(); hitBankRow++){
 						// cycle over the entires in the hitbank (separate layers and regions)
 
@@ -266,7 +278,6 @@ public class residuals{
 							float trkDoca = hitBank.getFloat("trkDoca",hitBankRow);
 							// fitted distance of closest approach to wire
 							int LR = hitBank.getInt("LR", hitBankRow);
-							// println(doca-trkDoca);
 							// trkDoca to the (L)eft or (R)ight of wire, determines sign of residual
 							double residual = LR*(trkDoca-doca)*10000; //*10000 to convert to microm
 
@@ -277,6 +288,7 @@ public class residuals{
 							sVsl_array[sector-1][superlayer-1].fill(residual);
 							sVl_array[sector-1][(superlayer-1)*6+(layer)-1].fill(residual);
 						}
+					}
 					}
 				}
 			}
@@ -344,7 +356,10 @@ public class residuals{
 					sVsl_fits[sector][superlayer].setLineWidth(5); 
 					sVsl_fits[sector][superlayer].setLineStyle(0);
 					sVsl_canvas[sector].draw(sVsl_fits[sector][superlayer],"same");
-					sVsl_fits[sector][superlayer].setOptStat(1110);
+					sVsl_fits[sector][superlayer].setOptStat(10001100);
+					sVsl_canvas[sector].setAxisLabelSize(14);
+					sVsl_canvas[sector].setStatBoxFontSize(14);
+					sVsl_canvas[sector].setAxisTitleSize(18);
 					println("Fit has chi2dof = "+
 						(sVsl_fits[sector][superlayer].getChiSquare()/(n_bins-1)));
 

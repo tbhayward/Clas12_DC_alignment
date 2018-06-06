@@ -1,8 +1,8 @@
 /*
  * author Timothy B. Hayward
- * April 2018
+ * 2018
  * CLAS (12) Collaboration Service Work 
- * (with Torri Roark and Tyler Viducic, supervised by Mac Mestayer)
+ * (supervised by Mac Mestayer)
  */
 
 public class update_alignment_table {

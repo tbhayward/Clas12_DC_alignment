@@ -1,8 +1,8 @@
 /*
  * author Timothy B. Hayward
- * April 2018
+ * 2018
  * CLAS (12) Collaboration Service Work 
- * (with Torri Roark and Tyler Viducic, supervised by Mac Mestayer)
+ * (supervised by Mac Mestayer)
  */
 
 import java.io.File;
@@ -24,20 +24,6 @@ import org.jlab.groot.fitter.DataFitter;
 
 
 public class elastic_peak{
-
-	// public static def hipo_list_creation(String directory_location) {
-	// 	// returns an array of the part of the file name after the directory
-	// 	// hipo files then speicified by args[0]+hipo_list[i] for some index i
-	// 	Path directory = Paths.get(directory_location);
-	// 	BasicFileAttributes attrs = Files.readAttributes(directory, BasicFileAttributes);
-	// 	def hipo_list = []; 
-	// 	int iteration = 0;
-	// 	directory.eachFile{
- //   			hipo_list[iteration] = "${it.fileName}";
- //    		iteration++;
-	// 	}
-	// 	return hipo_list;
-	// }
 
 	public static boolean banks_test(HipoDataEvent event) {
 		boolean banks_exist = true; // check to see if the event has all of the banks present
@@ -226,29 +212,29 @@ public class elastic_peak{
 			}
 		}
 
-	histogram.unit();
-	double mu = bin_centers[histogram.getMaximumBin()];
-	int half_height_index = 0;
-	double half_height_test = 0;
-	while(half_height_test < 0.5) {
-		half_height_test = histogram.getDataY(half_height_index);
-		half_height_index++;
-	}
-	double sigma = mu-bin_centers[half_height_index];
-	println(mu+" +/- "+sigma);
+		histogram.unit();
+		double mu = bin_centers[histogram.getMaximumBin()];
+		int half_height_index = 0;
+		double half_height_test = 0;
+		while(half_height_test < 0.5) {
+			half_height_test = histogram.getDataY(half_height_index);
+			half_height_index++;
+		}
+		double sigma = mu-bin_centers[half_height_index];
+		println(mu+" +/- "+sigma);
 
-	F1D func = fit_function(n_bins, min_bin, max_bin, histogram, mu, sigma);
-	// draw the histogram
-	canvas.draw(histogram);
-	frame.add(canvas);
-	frame.setLocationRelativeTo(null);
-	frame.setVisible(true);
-	canvas.setStatBoxFontSize(18);
-	histogram.setOptStat(10);
-	func.show();
-	func.setLineColor(2); func.setLineWidth(5); func.setLineStyle(0);
-	canvas.draw(func,"same");
-	func.setOptStat(1110);
-	println("Fit has chi2dof = "+(func.getChiSquare()/(n_bins-1)));
+		F1D func = fit_function(n_bins, min_bin, max_bin, histogram, mu, sigma);
+		// draw the histogram
+		canvas.draw(histogram);
+		frame.add(canvas);
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+		canvas.setStatBoxFontSize(18);
+		histogram.setOptStat(10);
+		func.show();
+		func.setLineColor(2); func.setLineWidth(5); func.setLineStyle(0);
+		canvas.draw(func,"same");
+		func.setOptStat(1110);
+		println("Fit has chi2dof = "+(func.getChiSquare()/(n_bins-1)));
     }
 }
